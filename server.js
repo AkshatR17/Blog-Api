@@ -30,11 +30,10 @@ app.get("/new", (req, res) => {
 app.get("/edit/:id", async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts/${req.params.id}`);
-    // console.log(response.data);
     res.render("modify.ejs", {
       heading: "Edit Post",
       submit: "Update Post",
-      post: response.data,
+      post: response.data.rows[0],
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching post" });

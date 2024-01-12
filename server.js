@@ -12,7 +12,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Route to render the main page
-app.get("/", async (req, res) => {
+app.get('/', (req,res)=>{
+  res.render('loginAndRegister.ejs');
+});
+
+app.get("/home", async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts`);
     // console.log(response);

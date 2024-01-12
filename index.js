@@ -1,7 +1,7 @@
+import 'dotenv/config'
 import express from "express";
 import bodyParser from "body-parser";
 import pg from 'pg';
-import { data } from "./secrets.js";
 
 const app = express();
 const port = 4000;
@@ -9,9 +9,9 @@ const port = 4000;
 const db = new pg.Client({
   user: 'postgres',
   host: 'localhost',
-  database: data.database,
-  password: data.password,
-  port: data.port
+  database: process.env.DATABASE,
+  password: process.env.PASSWORD,
+  port: process.env.PORT
 });
 
 db.connect();

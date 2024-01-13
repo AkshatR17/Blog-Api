@@ -1,10 +1,31 @@
+import dotenv from 'dotenv';
 import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
+import bcrypt from 'bcrypt';
+import pg from 'pg';
+dotenv.config();
+const saltRounds = 10;
 
 const app = express();
 const port = 3000;
 const API_URL = "http://localhost:4000";
+
+const db = new pg.Client({
+  user: 'postgres',
+  host: 'localhost',
+  database: process.env.DATABASE,
+  password: process.env.PASSWORD,
+  port: process.env.PORT
+});
+
+db.connect()
+  .then(() => {
+    console.log('Connected to the database');
+  })
+  .catch((err) => {
+    console.error('Error connecting to the database', err);
+  });
 
 app.use(express.static("public"));
 
@@ -12,8 +33,57 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Route to render the main page
-app.get('/', (req,res)=>{
+app.get('/', (req, res) => {
   res.render('loginAndRegister.ejs');
+});
+
+// login and registration route
+
+app.post('/register', async (req, res) => {
+  try {
+    const checkUserQuery = 'SELECT * FROM users WHERE email = $1 AND username = $2';
+    const checkUserValues = [req.body.email, req.body.username];
+    const existingUser = await db.query(checkUserQuery, checkUserValues);
+
+    if (existingUser.rows.length > 0) {
+      return res.status(409).send('User already exists');
+    }
+
+    const hash = await bcrypt.hash(req.body.password, saltRounds);
+    const insertUserQuery = 'INSERT INTO users(username, email, hash) VALUES($1, $2, $3)';
+    const insertUserValues = [req.body.username, req.body.email, hash];
+    await db.query(insertUserQuery, insertUserValues);
+
+    res.redirect('/home');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const userName = req.body.username;
+  const password = req.body.password;
+
+  try {
+    const result = await db.query('SELECT * FROM users WHERE username = $1', [userName]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(404).send('Username not found');
+    }
+
+    bcrypt.compare(password, user.hash).then(function (result) {
+      if (result == true) {
+        res.redirect('/home');
+      } else {
+        res.status(401).send('Incorrect password');
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 app.get("/home", async (req, res) => {

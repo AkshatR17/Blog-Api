@@ -12,10 +12,10 @@
         <div class="user signinBx">
           <div class="imgBx"><img src="../images/pexels-kris-lucas-5107839 (1).jpg" alt="" /></div>
           <div class="formBx">
-            <form action="" onsubmit="return false;">
+            <form action="/login" method="post">
               <h2>Sign In</h2>
-              <input type="text" name="" placeholder="Username" />
-              <input type="password" name="" placeholder="Password" />
+              <input type="text" name="username" placeholder="Username" />
+              <input type="password" name="password" placeholder="Password" />
               <input type="submit" name="" value="Login" />
               <p class="signup">
                 Don't have an account ?
@@ -26,11 +26,11 @@
         </div>
         <div class="user signupBx">
           <div class="formBx">
-            <form action="" onsubmit="return false;">
+            <form action="/register" method="post">
               <h2>Create an account</h2>
-              <input type="text" name="" placeholder="Username" />
-              <input type="email" name="" placeholder="Email Address" />
-              <input type="password" name="" placeholder="Create Password" />
+              <input type="text" name="username" placeholder="Username" />
+              <input type="email" name="email" placeholder="Email Address" />
+              <input type="password" name="password" placeholder="Create Password" />
               <input type="submit" name="" value="Sign Up" />
               <p class="signup">
                 Already have an account ?

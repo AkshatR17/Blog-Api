@@ -5,7 +5,7 @@ import axios from "axios";
 import bcrypt from 'bcrypt';
 import pg from 'pg';
 import passport from 'passport';
-import{ issueJWT } from './lib/utils.js';
+import { issueJWT } from './lib/utils.js';
 import { auth } from './config/passport.js';
 import cookieParser from 'cookie-parser';
 dotenv.config();
@@ -40,8 +40,19 @@ app.use(passport.initialize());
 auth(passport);
 // Route to render the main page
 
-app.get('/',(req, res) => {
-  console.log(req.cookies);
+const authHeaderMiddleware = (req, res, next) => {
+ 
+  if (req.cookies && req.cookies.jwt) {
+    const jwtToken = req.cookies.jwt.split(' ')[1];
+    req.headers.authorization = `Bearer ${jwtToken}`;
+  }
+
+  next();
+};
+
+
+app.get('/', (req, res) => {
+  // console.log(req.cookies);
   res.render('loginAndRegister.ejs');
 });
 
@@ -54,7 +65,7 @@ app.post('/register', async (req, res) => {
     const existingUser = await db.query(checkUserQuery, checkUserValues);
 
     if (existingUser.rows.length > 0) {
-      return res.status(409).render('loginAndRegister.ejs',{error : 'User already exists'});
+      return res.status(409).render('loginAndRegister.ejs', { error: 'User already exists' });
     }
 
     const hash = await bcrypt.hash(req.body.password, saltRounds);
@@ -78,7 +89,7 @@ app.post('/login', async (req, res) => {
     const user = result.rows[0];
 
     if (!user) {
-      return res.status(404).render('loginAndRegister.ejs', {error: 'Username not found'});
+      return res.status(404).render('loginAndRegister.ejs', { error: 'Username not found' });
     }
 
     bcrypt.compare(password, user.hash).then(function (result) {
@@ -90,7 +101,7 @@ app.post('/login', async (req, res) => {
         res.status(200).json({ success: true, token: tokenObject.token, expiresIn: tokenObject.expires });
 
       } else {
-        res.status(401).render('loginAndRegister.ejs',{error : 'Incorrect password'});
+        res.status(401).render('loginAndRegister.ejs', { error: 'Incorrect password' });
       }
     });
   } catch (error) {
@@ -99,7 +110,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get("/home", passport.authenticate('jwt', {session: false}) ,async (req, res) => {
+app.get("/home", authHeaderMiddleware, passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts`);
     // console.log(response);

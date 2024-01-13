@@ -4,12 +4,15 @@ import bodyParser from "body-parser";
 import axios from "axios";
 import bcrypt from 'bcrypt';
 import pg from 'pg';
+import passport from 'passport';
+import{ issueJWT } from './lib/utils.js';
+import { auth } from './config/passport.js';
 dotenv.config();
 const saltRounds = 10;
 
 const app = express();
 const port = 3000;
-const API_URL = "http://localhost:4000";
+const API_URL = process.env.URL;
 
 const db = new pg.Client({
   user: 'postgres',
@@ -31,8 +34,10 @@ app.use(express.static("public"));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
+app.use(passport.initialize());
+auth(passport);
 // Route to render the main page
+
 app.get('/', (req, res) => {
   res.render('loginAndRegister.ejs');
 });
@@ -75,7 +80,8 @@ app.post('/login', async (req, res) => {
 
     bcrypt.compare(password, user.hash).then(function (result) {
       if (result == true) {
-        res.redirect('/home');
+        const tokenObject = issueJWT(user);
+        res.status(200).json({ success: true, token: tokenObject.token, expiresIn: tokenObject.expires });
       } else {
         res.status(401).render('loginAndRegister.ejs',{error : 'Incorrect password'});
       }
@@ -86,7 +92,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get("/home", async (req, res) => {
+app.get("/home", passport.authenticate('jwt', {session: false}) ,async (req, res) => {
   try {
     const response = await axios.get(`${API_URL}/posts`);
     // console.log(response);

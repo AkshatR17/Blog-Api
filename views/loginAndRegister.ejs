@@ -17,6 +17,9 @@
               <input type="text" name="username" placeholder="Username" />
               <input type="password" name="password" placeholder="Password" />
               <input type="submit" name="" value="Login" />
+              <% if(locals){ %>
+                <p class="err"> <%= locals.error %></p>
+              <% } %>
               <p class="signup">
                 Don't have an account ?
                 <a href="#" onclick="toggleForm();">Sign Up.</a>
@@ -32,6 +35,9 @@
               <input type="email" name="email" placeholder="Email Address" />
               <input type="password" name="password" placeholder="Create Password" />
               <input type="submit" name="" value="Sign Up" />
+              <% if(locals){ %>
+                <p class="err"> <%= locals.error %></p>
+              <% } %>
               <p class="signup">
                 Already have an account ?
                 <a href="#" onclick="toggleForm();">Sign in.</a>

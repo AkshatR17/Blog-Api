@@ -46,7 +46,7 @@ app.post('/register', async (req, res) => {
     const existingUser = await db.query(checkUserQuery, checkUserValues);
 
     if (existingUser.rows.length > 0) {
-      return res.status(409).send('User already exists');
+      return res.status(409).render('loginAndRegister.ejs',{error : 'User already exists'});
     }
 
     const hash = await bcrypt.hash(req.body.password, saltRounds);
@@ -54,7 +54,7 @@ app.post('/register', async (req, res) => {
     const insertUserValues = [req.body.username, req.body.email, hash];
     await db.query(insertUserQuery, insertUserValues);
 
-    res.redirect('/home');
+    res.redirect('/');
   } catch (error) {
     console.error(error);
     res.status(500).send('Internal Server Error');
@@ -70,14 +70,14 @@ app.post('/login', async (req, res) => {
     const user = result.rows[0];
 
     if (!user) {
-      return res.status(404).send('Username not found');
+      return res.status(404).render('loginAndRegister.ejs', {error: 'Username not found'});
     }
 
     bcrypt.compare(password, user.hash).then(function (result) {
       if (result == true) {
         res.redirect('/home');
       } else {
-        res.status(401).send('Incorrect password');
+        res.status(401).render('loginAndRegister.ejs',{error : 'Incorrect password'});
       }
     });
   } catch (error) {

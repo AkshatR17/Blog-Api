@@ -7,6 +7,7 @@ import pg from 'pg';
 import passport from 'passport';
 import{ issueJWT } from './lib/utils.js';
 import { auth } from './config/passport.js';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 const saltRounds = 10;
 
@@ -32,13 +33,15 @@ db.connect()
 
 app.use(express.static("public"));
 
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(passport.initialize());
 auth(passport);
 // Route to render the main page
 
-app.get('/', (req, res) => {
+app.get('/',(req, res) => {
+  console.log(req.cookies);
   res.render('loginAndRegister.ejs');
 });
 
@@ -81,7 +84,11 @@ app.post('/login', async (req, res) => {
     bcrypt.compare(password, user.hash).then(function (result) {
       if (result == true) {
         const tokenObject = issueJWT(user);
+
+        res.cookie('jwt', tokenObject.token, { httpOnly: true, secure: true });
+
         res.status(200).json({ success: true, token: tokenObject.token, expiresIn: tokenObject.expires });
+
       } else {
         res.status(401).render('loginAndRegister.ejs',{error : 'Incorrect password'});
       }
